@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+
+/* Paleta y tipografía de las pantallas originales */
+@theme {
+  --color-primary: #13ec5b;
+  --color-fondo: #0a110d;
+  --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+html,
+body {
+  background: var(--color-fondo);
+  color: #fff;
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+@layer components {
+  .glass-card {
+    background: rgba(10, 17, 13, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .logo-glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Fondo tipo estadio de noche, hecho solo con CSS (no depende de imágenes externas) */
+  .fondo-estadio {
+    background:
+      radial-gradient(ellipse 60% 35% at 20% 0%, rgba(255, 255, 255, 0.18), transparent 70%),
+      radial-gradient(ellipse 60% 35% at 80% 0%, rgba(255, 255, 255, 0.14), transparent 70%),
+      radial-gradient(ellipse 90% 50% at 50% 110%, rgba(19, 236, 91, 0.35), transparent 70%),
+      repeating-linear-gradient(90deg, rgba(19, 236, 91, 0.05) 0 60px, rgba(19, 236, 91, 0.1) 60px 120px),
+      #0a110d;
+  }
+
+  .fondo-overlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(10, 17, 13, 0.75) 0%,
+      rgba(19, 236, 91, 0.08) 50%,
+      rgba(10, 17, 13, 0.95) 100%
+    );
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+  }
+}

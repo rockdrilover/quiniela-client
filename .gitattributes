@@ -1,0 +1,5 @@
+# En el repo todo va con saltos de línea LF (el servidor es Linux)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
