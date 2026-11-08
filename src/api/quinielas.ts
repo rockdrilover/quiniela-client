@@ -22,6 +22,7 @@ export type Quiniela = {
 }
 
 export type MisQuinielas = {
+  estadoUsuario: 'pendiente' | 'aprobado' | 'bloqueado'
   actual: Jornada | null
   puedeCrear: boolean
   motivoNoPuedeCrear: string | null

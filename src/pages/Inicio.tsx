@@ -12,7 +12,7 @@ import { fechaHoraCorta } from '../lib/fechas'
 
 /** Pantalla 3: Mis Quinielas. */
 export function Inicio() {
-  const { usuario } = useAuth()
+  const { usuario, actualizarUsuario } = useAuth()
   const [datos, setDatos] = useState<MisQuinielas | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,12 +20,17 @@ export function Inicio() {
     let vivo = true
     quinielasApi
       .mias()
-      .then((d) => vivo && setDatos(d))
+      .then((d) => {
+        if (!vivo) return
+        setDatos(d)
+        // Si el admin lo aprobó mientras tenía la app abierta, el token aún dice "pendiente": manda la BD
+        actualizarUsuario({ estado: d.estadoUsuario })
+      })
       .catch((e: Error) => vivo && setError(e.message))
     return () => {
       vivo = false
     }
-  }, [])
+  }, [actualizarUsuario])
 
   if (!usuario) return null
 

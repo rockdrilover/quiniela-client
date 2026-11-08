@@ -127,7 +127,10 @@ function Ganadores({ filas }: { filas: FilaRanking[] }) {
         <p className="truncate font-bold">
           {ganadores.map((g) => nombreFila(g)).join(', ')}
           {ganadores[0].premio !== null && (
-            <span className="text-primary"> · {pesos.format(ganadores[0].premio)} c/u</span>
+            <span className="text-primary">
+              {' '}· {pesos.format(ganadores[0].premio)}
+              {ganadores.length > 1 && ' c/u'}
+            </span>
           )}
         </p>
       </div>
