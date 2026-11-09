@@ -40,12 +40,15 @@ export type Pronostico = {
 }
 
 export type EstadoComprobante = 'en_revision' | 'aprobado' | 'rechazado'
+export type TipoPago = 'comprobante' | 'manual'
 
 export type Comprobante = {
   id: number
+  /** "manual": el admin registró que le pagaste por fuera; no hay archivo. */
+  tipo: TipoPago
   estado: EstadoComprobante
   subidoAt: string
-  mimeType: string
+  mimeType: string | null
   motivoRechazo: string | null
 }
 

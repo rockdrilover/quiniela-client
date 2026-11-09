@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import type { Partido } from '../api/jornadas'
 import { rankingApi, type Celda, type FilaRanking, type JornadaOpcion, type Ranking as RankingDatos } from '../api/ranking'
 import { Alerta } from '../components/Alerta'
+import { Avatar } from '../components/Avatar'
 import { EstadoJornadaBadge } from '../components/EstadoJornadaBadge'
 import { Icono } from '../components/Icono'
 
@@ -139,7 +140,7 @@ function Ganadores({ filas }: { filas: FilaRanking[] }) {
 }
 
 function Rejilla({ datos }: { datos: RankingDatos }) {
-  const columnas = `minmax(132px, 160px) repeat(${datos.partidos.length}, minmax(52px, 1fr)) 64px`
+  const columnas = `minmax(156px, 184px) repeat(${datos.partidos.length}, minmax(52px, 1fr)) 64px`
   const fijoIzq = 'sticky left-0 z-20 backdrop-blur-md border-r border-white/10'
   const fondo = (mia: boolean) => (mia ? 'bg-[#123321]' : 'bg-[#0e1712]')
   const fijoDer = 'sticky right-0 z-10 backdrop-blur-md border-l border-white/10'
@@ -167,6 +168,7 @@ function Rejilla({ datos }: { datos: RankingDatos }) {
               <div key={f.idQuiniela} className="contents">
                 <div className={`${fijoIzq} flex items-center gap-2 border-b border-white/5 px-3 py-3 ${fondo(f.esMia)}`}>
                   <Medalla posicion={f.posicion} />
+                  <Avatar nombre={f.username} avatar={f.avatar} tamano="mini" />
                   <div className="min-w-0">
                     <p className={`truncate text-[12px] font-bold ${f.esMia ? 'text-primary' : ''}`}>
                       {nombreFila(f)}

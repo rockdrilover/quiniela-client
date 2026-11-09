@@ -1,3 +1,4 @@
+import type { EleccionAvatar } from '../lib/avatares'
 import { api } from './cliente'
 
 export type DatosUsuario = {
@@ -9,6 +10,7 @@ export type DatosUsuario = {
   estado: 'pendiente' | 'aprobado' | 'bloqueado'
   fechaRegistro: string
   ultimoLogin: string | null
+  avatar: string | null
 }
 
 export type Estadisticas = {
@@ -46,6 +48,7 @@ export type UsuarioAdmin = {
   fechaRegistro: string
   aprobadoAt: string | null
   ultimoLogin: string | null
+  avatar: string | null
 }
 
 export type Pagina<T> = { elementos: T[]; pagina: number; tamano: number; total: number; totalPaginas: number }
@@ -53,6 +56,16 @@ export type Pagina<T> = { elementos: T[]; pagina: number; tamano: number; total:
 export const perfilApi = {
   ver: () => api<Perfil>('/api/perfil'),
   cambiarNombre: (nombre: string) => api<Perfil>('/api/perfil', { metodo: 'PUT', cuerpo: { nombre } }),
+  /** Guarda lo que eligió en el selector: foto, avatar predefinido o iniciales. */
+  guardarAvatar: (e: Exclude<EleccionAvatar, null>) => {
+    if (e.tipo === 'foto') {
+      const datos = new FormData()
+      datos.append('archivo', e.archivo)
+      return api<Perfil>('/api/perfil/avatar', { metodo: 'POST', cuerpo: datos })
+    }
+    if (e.tipo === 'preset') return api<Perfil>('/api/perfil/avatar', { metodo: 'PUT', cuerpo: { preset: e.preset } })
+    return api<Perfil>('/api/perfil/avatar', { metodo: 'DELETE' })
+  },
 }
 
 export const usuariosApi = {

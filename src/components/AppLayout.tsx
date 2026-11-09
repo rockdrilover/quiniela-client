@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router'
 
 import { useAuth } from '../auth/AuthContext'
+import { Avatar } from './Avatar'
 import { Icono } from './Icono'
 
 /** Marco de las pantallas con sesión: encabezado arriba y barra de navegación abajo (estilo app móvil). */
@@ -23,9 +24,9 @@ export function AppLayout() {
       <header className="sticky top-0 z-40 border-b border-white/10 bg-black/40 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-sm font-black text-primary uppercase">
-              {usuario.username.slice(0, 2)}
-            </div>
+            <NavLink to="/perfil" aria-label="Mi perfil">
+              <Avatar nombre={usuario.nombre} avatar={usuario.avatar} tamano="chico" />
+            </NavLink>
             <div className="min-w-0">
               <p className="text-[10px] font-bold tracking-[0.15em] text-white/60 uppercase">
                 {usuario.rol === 'admin' ? 'Panel Admin' : 'Quiniela MX'}

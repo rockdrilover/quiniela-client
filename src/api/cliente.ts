@@ -18,6 +18,8 @@ export type Usuario = {
   correo: string
   rol: 'admin' | 'usuario'
   estado: 'pendiente' | 'aprobado' | 'bloqueado'
+  /** "/api/avatares/..." (foto), "preset:<nombre>" o null (iniciales). */
+  avatar: string | null
 }
 
 export type Tokens = {

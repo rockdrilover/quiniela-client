@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router'
 
 import { jornadasApi, type Equipo, type JornadaDetalle, type Partido } from '../../api/jornadas'
 import { Alerta } from '../../components/Alerta'
+import { useConfirmar } from '../../components/Confirmar'
 import { EquipoChip } from '../../components/EquipoChip'
 import { EstadoJornadaBadge } from '../../components/EstadoJornadaBadge'
 import { Icono } from '../../components/Icono'
@@ -20,6 +21,7 @@ export function AdminPartidos() {
   const [equipos, setEquipos] = useState<Equipo[]>([])
   const [errorCarga, setErrorCarga] = useState<string | null>(null)
   const op = useOperacion()
+  const confirmar = useConfirmar()
 
   const cargar = useCallback(async () => {
     try {
@@ -80,7 +82,22 @@ export function AdminPartidos() {
       )}
       {j.estado === 'finalizada' && <Alerta tipo="exito">Jornada finalizada: los marcadores y el ranking ya son definitivos.</Alerta>}
 
+      {enBorrador && (
+        <NuevoPartido
+          equipos={equipos}
+          ocupados={ocupados}
+          ocupado={op.ocupado === 'nuevo'}
+          onAgregar={(d) => actualizar('nuevo', () => jornadasApi.agregarPartido(j.id, d), 'Partido agregado')}
+        />
+      )}
+
       <section className="glass-card space-y-6 rounded-2xl p-5">
+        {enBorrador && (
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-black tracking-widest uppercase">Partidos de la jornada</h2>
+            <span className="text-xs font-bold text-primary">{partidos.length}</span>
+          </div>
+        )}
         {partidos.length === 0 && <p className="text-center text-sm text-white/50">Aún no hay partidos en esta jornada.</p>}
 
         {partidos.map((p, i) =>
@@ -93,10 +110,15 @@ export function AdminPartidos() {
               ocupados={ocupados}
               ocupado={op.ocupado}
               onGuardar={(d) => actualizar(`p-${p.id}`, () => jornadasApi.editarPartido(p.id, d), 'Partido actualizado')}
-              onQuitar={() => {
-                if (window.confirm(`¿Quitar ${p.local.nombre} vs ${p.visitante.nombre}?`)) {
-                  actualizar(`q-${p.id}`, () => jornadasApi.eliminarPartido(p.id), 'Partido quitado')
-                }
+              onQuitar={async () => {
+                const ok = await confirmar({
+                  titulo: 'Quitar partido',
+                  mensaje: <>¿Quitar <strong>{p.local.nombre} vs {p.visitante.nombre}</strong> de la jornada?</>,
+                  confirmar: 'Quitar',
+                  tono: 'peligro',
+                  icono: 'delete',
+                })
+                if (ok) actualizar(`q-${p.id}`, () => jornadasApi.eliminarPartido(p.id), 'Partido quitado')
               }}
             />
           ) : (
@@ -113,22 +135,18 @@ export function AdminPartidos() {
                   p.estado === 'finalizado' ? 'Marcador corregido; el ranking ya se actualizó' : 'Partido finalizado; el ranking ya se actualizó',
                 )
               }
-              onSuspender={() => {
-                if (window.confirm(`¿Suspender ${p.local.nombre} vs ${p.visitante.nombre}? No contará para puntos.`)) {
-                  actualizar(`s-${p.id}`, () => jornadasApi.suspender(p.id), 'Partido suspendido')
-                }
+              onSuspender={async () => {
+                const ok = await confirmar({
+                  titulo: 'Suspender partido',
+                  mensaje: <><strong>{p.local.nombre} vs {p.visitante.nombre}</strong> no contará para puntos.</>,
+                  confirmar: 'Suspender',
+                  tono: 'peligro',
+                  icono: 'block',
+                })
+                if (ok) actualizar(`s-${p.id}`, () => jornadasApi.suspender(p.id), 'Partido suspendido')
               }}
             />
           ),
-        )}
-
-        {enBorrador && (
-          <NuevoPartido
-            equipos={equipos}
-            ocupados={ocupados}
-            ocupado={op.ocupado === 'nuevo'}
-            onAgregar={(d) => actualizar('nuevo', () => jornadasApi.agregarPartido(j.id, d), 'Partido agregado')}
-          />
         )}
       </section>
 
@@ -136,7 +154,20 @@ export function AdminPartidos() {
         <button
           type="button"
           disabled={op.ocupado !== null}
-          onClick={() => actualizar('abrir', () => jornadasApi.accion(j.id, 'abrir'), `${j.nombre} abierta: ya se pueden capturar pronósticos`)}
+          onClick={async () => {
+            const ok = await confirmar({
+              titulo: 'Activar jornada',
+              mensaje: (
+                <>
+                  Los jugadores podrán capturar quinielas de <strong>{j.nombre}</strong> hasta que empiece el primer
+                  partido. Después ya no podrás cambiar los partidos.
+                </>
+              ),
+              confirmar: 'Activar',
+              icono: 'play_circle',
+            })
+            if (ok) actualizar('abrir', () => jornadasApi.accion(j.id, 'abrir'), `${j.nombre} abierta: ya se pueden capturar pronósticos`)
+          }}
           className="w-full rounded-2xl bg-primary py-5 text-lg font-black tracking-widest text-fondo uppercase shadow-[0_0_25px_rgba(19,236,91,0.5)] transition-all active:scale-[0.97] disabled:opacity-50"
         >
           Activar jornada
@@ -285,23 +316,14 @@ function NuevoPartido(props: {
   ocupado: boolean
   onAgregar: (d: DatosPartido) => Promise<unknown>
 }) {
-  const [abierto, setAbierto] = useState(false)
-  if (!abierto) {
-    return (
-      <button
-        type="button"
-        onClick={() => setAbierto(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-white/10 py-4 text-[10px] font-black tracking-widest text-white/50 uppercase transition-all hover:bg-white/5"
-      >
-        <Icono nombre="add_circle" className="text-lg!" /> Añadir partido
-      </button>
-    )
-  }
   return (
-    <div className="space-y-3 rounded-xl border border-dashed border-primary/40 p-3">
-      <span className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">Nuevo partido</span>
+    <section className="glass-card space-y-4 rounded-2xl p-5">
+      <div className="flex items-center gap-2">
+        <Icono nombre="add_circle" className="text-primary" />
+        <h2 className="text-sm font-black tracking-widest uppercase">Crear partido</h2>
+      </div>
       <FormPartido equipos={props.equipos} ocupados={props.ocupados} ocupado={props.ocupado} textoBoton="Añadir" onEnviar={props.onAgregar} limpiarAlEnviar />
-    </div>
+    </section>
   )
 }
 

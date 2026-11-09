@@ -21,6 +21,7 @@ export type FilaRanking = {
   numero: number
   idUsuario: number
   username: string
+  avatar: string | null
   variasQuinielas: boolean
   puntos: number
   exactos: number

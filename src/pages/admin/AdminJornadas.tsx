@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 import { jornadasApi, type Jornada, type ListaJornadas } from '../../api/jornadas'
 import { Alerta } from '../../components/Alerta'
 import { BotonPrimario } from '../../components/Boton'
+import { useConfirmar, type OpcionesConfirmar } from '../../components/Confirmar'
 import { EstadoJornadaBadge } from '../../components/EstadoJornadaBadge'
 import { Icono } from '../../components/Icono'
 import { fechaHoraCorta } from '../../lib/fechas'
@@ -14,6 +15,7 @@ export function AdminJornadas() {
   const [datos, setDatos] = useState<ListaJornadas | null>(null)
   const [errorCarga, setErrorCarga] = useState<string | null>(null)
   const op = useOperacion()
+  const confirmar = useConfirmar()
 
   const cargar = useCallback(async () => {
     try {
@@ -29,12 +31,38 @@ export function AdminJornadas() {
   }, [cargar])
 
   async function accion(j: Jornada, tipo: 'abrir' | 'cerrar' | 'finalizar' | 'ocultar' | 'mostrar' | 'eliminar') {
-    const confirmaciones: Partial<Record<typeof tipo, string>> = {
-      cerrar: `¿Cerrar "${j.nombre}"? Ya no se aceptarán más pronósticos.`,
-      finalizar: `¿Finalizar "${j.nombre}"? El ranking quedará definitivo y ya no se podrán corregir marcadores.`,
-      eliminar: `¿Eliminar "${j.nombre}" y sus partidos? No se puede deshacer.`,
+    const nombre = <strong>{j.nombre}</strong>
+    const confirmaciones: Partial<Record<typeof tipo, OpcionesConfirmar>> = {
+      abrir: {
+        titulo: 'Activar jornada',
+        mensaje: <>Los jugadores podrán capturar quinielas de {nombre} hasta que empiece el primer partido.</>,
+        confirmar: 'Activar',
+        icono: 'play_circle',
+      },
+      cerrar: {
+        titulo: 'Cerrar jornada',
+        mensaje: <>Ya no se aceptarán más pronósticos en {nombre}.</>,
+        confirmar: 'Cerrar',
+        tono: 'peligro',
+        icono: 'cancel',
+      },
+      finalizar: {
+        titulo: 'Finalizar jornada',
+        mensaje: <>El ranking de {nombre} quedará definitivo y ya no se podrán corregir marcadores ni validar pagos.</>,
+        confirmar: 'Finalizar',
+        tono: 'peligro',
+        icono: 'flag',
+      },
+      eliminar: {
+        titulo: 'Eliminar jornada',
+        mensaje: <>Se borrarán {nombre} y sus partidos. No se puede deshacer.</>,
+        confirmar: 'Eliminar',
+        tono: 'peligro',
+        icono: 'delete',
+      },
     }
-    if (confirmaciones[tipo] && !window.confirm(confirmaciones[tipo])) return
+    const pregunta = confirmaciones[tipo]
+    if (pregunta && !(await confirmar(pregunta))) return
 
     const exitos = {
       abrir: `${j.nombre} abierta: ya se pueden capturar pronósticos`,

@@ -2,6 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 
 import { ApiError } from '../api/cliente'
+import { perfilApi } from '../api/perfil'
 import { useAuth, type DatosRegistro } from '../auth/AuthContext'
 import { Alerta } from '../components/Alerta'
 import { AuthLayout } from '../components/AuthLayout'
@@ -9,6 +10,8 @@ import { BotonPrimario } from '../components/Boton'
 import { Campo } from '../components/Campo'
 import { passwordValida } from '../auth/password'
 import { ReglasPassword } from '../components/ReglasPassword'
+import { SelectorAvatar } from '../components/SelectorAvatar'
+import type { EleccionAvatar } from '../lib/avatares'
 
 type Errores = Partial<Record<keyof DatosRegistro, string>>
 
@@ -28,7 +31,8 @@ function validar(d: DatosRegistro): Errores {
 }
 
 export function Registro() {
-  const { registrar } = useAuth()
+  const { registrar, actualizarUsuario } = useAuth()
+  const [avatar, setAvatar] = useState<EleccionAvatar>(null)
   const navigate = useNavigate()
   const [datos, setDatos] = useState(VACIO)
   const [errores, setErrores] = useState<Errores>({})
@@ -55,6 +59,15 @@ export function Registro() {
         username: datos.username.trim(),
         correo: datos.correo.trim(),
       })
+      // La cuenta ya existe: si el avatar falla no lo bloqueamos, lo puede cambiar después en su perfil
+      if (avatar && avatar.tipo !== 'ninguno') {
+        try {
+          const p = await perfilApi.guardarAvatar(avatar)
+          actualizarUsuario({ avatar: p.usuario.avatar })
+        } catch {
+          /* se queda con sus iniciales */
+        }
+      }
       navigate('/', { replace: true })
     } catch (err) {
       const apiErr = err instanceof ApiError ? err : new ApiError(0, {})
@@ -100,6 +113,11 @@ export function Registro() {
             error={errores.username}
           />
           {!errores.username && <p className="ml-1 text-xs text-white/40">Es el nombre que verán los demás en el ranking.</p>}
+        </div>
+
+        <div className="space-y-2">
+          <span className="ml-1 text-[10px] font-extrabold tracking-[0.15em] text-white/60 uppercase">Avatar (opcional)</span>
+          <SelectorAvatar nombre={datos.nombre} eleccion={avatar} onElegir={setAvatar} ocupado={enviando} />
         </div>
 
         <Campo

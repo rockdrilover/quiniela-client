@@ -5,26 +5,6 @@ import { Icono } from './Icono'
 
 const pesos = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })
 
-/** Círculo con las iniciales (no hay fotos de perfil todavía). */
-export function Avatar({ nombre, tamano = 'grande' }: { nombre: string; tamano?: 'grande' | 'chico' }) {
-  const iniciales = nombre
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join('')
-    .toUpperCase()
-  const clase =
-    tamano === 'grande'
-      ? 'h-28 w-28 border-4 text-4xl shadow-xl shadow-primary/10'
-      : 'h-10 w-10 border-2 text-sm'
-  return (
-    <div className={`flex shrink-0 items-center justify-center rounded-full border-primary/40 bg-primary/10 font-black text-primary ${clase}`}>
-      {iniciales || '?'}
-    </div>
-  )
-}
-
 const ESTADOS: Record<DatosUsuario['estado'], { texto: string; clase: string }> = {
   pendiente: { texto: 'Pendiente', clase: 'bg-yellow-400/15 text-yellow-200 border-yellow-300/40' },
   aprobado: { texto: 'Aprobado', clase: 'bg-primary/15 text-primary border-primary/40' },

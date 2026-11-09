@@ -4,10 +4,12 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { usuariosApi, type Perfil } from '../../api/perfil'
 import { useAuth } from '../../auth/AuthContext'
 import { Alerta } from '../../components/Alerta'
+import { confirmarBloqueo, useConfirmar } from '../../components/Confirmar'
 import { BotonPrimario } from '../../components/Boton'
 import { Campo } from '../../components/Campo'
 import { Icono } from '../../components/Icono'
-import { Avatar, EstadoUsuarioBadge, ListaHistorial, TarjetasEstadisticas } from '../../components/PerfilPartes'
+import { Avatar } from '../../components/Avatar'
+import { EstadoUsuarioBadge, ListaHistorial, TarjetasEstadisticas } from '../../components/PerfilPartes'
 import { fechaHoraCorta } from '../../lib/fechas'
 import { useOperacion } from '../../lib/useOperacion'
 
@@ -21,6 +23,7 @@ export function AdminUsuario() {
   const [nombre, setNombre] = useState('')
   const [correo, setCorreo] = useState('')
   const op = useOperacion()
+  const confirmar = useConfirmar()
 
   useEffect(() => {
     let vivo = true
@@ -66,16 +69,25 @@ export function AdminUsuario() {
   }
 
   async function estado(tipo: 'aprobar' | 'bloquear' | 'desbloquear') {
-    if (tipo === 'bloquear' && !window.confirm(`¿Bloquear a @${u.username}? Se cerrarán sus sesiones.`)) return
+    if (tipo === 'bloquear' && !(await confirmar(confirmarBloqueo(u.username)))) return
     const r = await op.ejecutar(tipo, () => usuariosApi.accion(u.id, tipo), 'Estado actualizado')
     if (r) setDatos((d) => d && { ...d, usuario: { ...d.usuario, estado: r.estado } })
   }
 
   async function eliminar() {
     if (
-      !window.confirm(
-        `¿Eliminar a @${u.username}?\n\nYa no podrá entrar ni aparecerá en la lista. Sus quinielas y lugares en el ranking se conservan. No se puede deshacer desde la app.`,
-      )
+      !(await confirmar({
+        titulo: 'Eliminar usuario',
+        mensaje: (
+          <>
+            <strong>@{u.username}</strong> ya no podrá entrar ni aparecerá en la lista. Sus quinielas y lugares en el
+            ranking se conservan. No se puede deshacer desde la app.
+          </>
+        ),
+        confirmar: 'Eliminar',
+        tono: 'peligro',
+        icono: 'person_remove',
+      }))
     )
       return
     const ok = await op.ejecutar('eliminar', async () => {
@@ -101,7 +113,7 @@ export function AdminUsuario() {
 
       <section className="glass-card space-y-6 rounded-[2.5rem] p-6">
         <div className="flex flex-col items-center gap-2 text-center">
-          <Avatar nombre={u.nombre} />
+          <Avatar nombre={u.nombre} avatar={u.avatar} />
           <p className="mt-2 text-xl font-extrabold">@{u.username}</p>
           <div className="flex items-center gap-2">
             <EstadoUsuarioBadge estado={u.estado} />

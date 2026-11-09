@@ -4,9 +4,10 @@ import { Link, useNavigate, useParams } from 'react-router'
 import type { JornadaDetalle, Partido } from '../api/jornadas'
 import { quinielasApi, seleccionDe, type Pago, type Pronostico, type Quiniela, type QuinielaDetalle, type Seleccion } from '../api/quinielas'
 import { Alerta } from '../components/Alerta'
+import { useConfirmar } from '../components/Confirmar'
 import { EquipoChip } from '../components/EquipoChip'
 import { EstadoQuinielaBadge } from '../components/EstadoQuinielaBadge'
-import { SeccionPago } from '../components/SeccionPago'
+import { PagoPrevio, SeccionPago } from '../components/SeccionPago'
 import { Icono } from '../components/Icono'
 import { fechaHoraCorta } from '../lib/fechas'
 import { useOperacion } from '../lib/useOperacion'
@@ -22,6 +23,7 @@ export function Pronosticos() {
   const esNueva = id === undefined
   const navegar = useNavigate()
   const op = useOperacion()
+  const confirmar = useConfirmar()
 
   const [jornada, setJornada] = useState<JornadaDetalle | null>(null)
   const [quiniela, setQuiniela] = useState<Quiniela | null>(null)
@@ -29,6 +31,8 @@ export function Pronosticos() {
   const [captura, setCaptura] = useState<Captura>({})
   const [errorCarga, setErrorCarga] = useState<string | null>(null)
   const [pago, setPago] = useState<Pago | null>(null)
+  /** Comprobante elegido antes de enviar: se sube en cuanto la quiniela queda enviada. */
+  const [comprobante, setComprobante] = useState<File | null>(null)
 
   useEffect(() => {
     let vivo = true
@@ -82,18 +86,46 @@ export function Pronosticos() {
       return
     }
     if (!enviar && lista.length === 0) return
+    const archivo = enviar && !yaEnviada ? comprobante : null
+    let fallo: string | null = null
     const r = await op.ejecutar(
       enviar ? 'enviar' : 'guardar',
-      () => (quiniela ? quinielasApi.guardar(quiniela.id, lista, enviar) : quinielasApi.crear(jornada.jornada.id, lista, enviar)),
-      'Pronósticos guardados correctamente',
+      async () => {
+        const d = await (quiniela
+          ? quinielasApi.guardar(quiniela.id, lista, enviar)
+          : quinielasApi.crear(jornada.jornada.id, lista, enviar))
+        if (!archivo || !d.pago.puedeSubir) return d
+        // La quiniela ya quedó enviada: si el comprobante falla, se puede volver a subir desde la sección de pago
+        try {
+          return await quinielasApi.subirComprobante(d.quiniela.id, archivo)
+        } catch (e) {
+          fallo = (e as Error).message
+          return d
+        }
+      },
+      archivo ? 'Quiniela enviada con tu comprobante. Te avisaremos por correo cuando lo revisemos.' : 'Pronósticos guardados correctamente',
     )
     if (!r) return
+    if (archivo) setComprobante(null)
     aplicar(r)
+    if (fallo) op.error(`Tu quiniela se envió, pero el comprobante no se subió (${fallo}). Súbelo de nuevo en la sección de pago.`)
     if (esNueva) navegar(`/quinielas/${r.quiniela.id}`, { replace: true })
   }
 
   async function eliminar() {
-    if (!quiniela || !window.confirm(`¿Eliminar la Quiniela ${quiniela.numero}? No se puede deshacer.`)) return
+    if (!quiniela) return
+    const seguro = await confirmar({
+      titulo: 'Eliminar quiniela',
+      mensaje: (
+        <>
+          Se borrará la <strong>Quiniela {quiniela.numero}</strong> con sus pronósticos. No se puede deshacer.
+        </>
+      ),
+      confirmar: 'Eliminar',
+      tono: 'peligro',
+      icono: 'delete',
+    })
+    if (!seguro) return
     const ok = await op.ejecutar('eliminar', async () => {
       await quinielasApi.eliminar(quiniela.id)
       return true
@@ -152,10 +184,6 @@ export function Pronosticos() {
           {j.aceptaPronosticos ? 'Esta quiniela es de solo lectura.' : 'La jornada ya cerró: tus pronósticos quedan en solo lectura.'}
         </Alerta>
       )}
-      {yaEnviada && quiniela && pago && (
-        <SeccionPago q={quiniela} pago={pago} onActualizada={aplicar} />
-      )}
-
       <ul className="space-y-4">
         {jornada.partidos.map((p) => (
           <TarjetaPartido
@@ -168,6 +196,9 @@ export function Pronosticos() {
           />
         ))}
       </ul>
+
+      {yaEnviada && quiniela && pago && <SeccionPago q={quiniela} pago={pago} onActualizada={aplicar} />}
+      {!yaEnviada && editable && <PagoPrevio monto={quiniela?.monto ?? j.precio} archivo={comprobante} onArchivo={setComprobante} />}
 
       {op.mensaje && <Alerta tipo={op.mensaje.tipo}>{op.mensaje.texto}</Alerta>}
 

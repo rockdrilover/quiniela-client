@@ -7,8 +7,11 @@ import { Alerta } from '../components/Alerta'
 import { BotonPrimario } from '../components/Boton'
 import { Campo } from '../components/Campo'
 import { Icono } from '../components/Icono'
-import { Avatar, EstadoUsuarioBadge, ListaHistorial, TarjetasEstadisticas } from '../components/PerfilPartes'
+import { Avatar } from '../components/Avatar'
+import { EstadoUsuarioBadge, ListaHistorial, TarjetasEstadisticas } from '../components/PerfilPartes'
 import { ReglasPassword } from '../components/ReglasPassword'
+import { SelectorAvatar } from '../components/SelectorAvatar'
+import type { EleccionAvatar } from '../lib/avatares'
 import { fechaHoraCorta } from '../lib/fechas'
 import { useOperacion } from '../lib/useOperacion'
 
@@ -19,6 +22,9 @@ export function Perfil() {
   const [error, setError] = useState<string | null>(null)
   const [nombre, setNombre] = useState('')
   const op = useOperacion()
+  const opAvatar = useOperacion()
+  const [editandoAvatar, setEditandoAvatar] = useState(false)
+  const [eleccion, setEleccion] = useState<EleccionAvatar>(null)
 
   useEffect(() => {
     let vivo = true
@@ -44,6 +50,17 @@ export function Perfil() {
     }
   }
 
+  async function guardarAvatar() {
+    if (!eleccion) return
+    const r = await opAvatar.ejecutar('avatar', () => perfilApi.guardarAvatar(eleccion))
+    if (r) {
+      setDatos(r)
+      actualizarUsuario({ avatar: r.usuario.avatar })
+      setEleccion(null)
+      setEditandoAvatar(false)
+    }
+  }
+
   if (error) return <Alerta tipo="error">{error}</Alerta>
   if (!datos) return <p className="text-center text-sm text-white/50">Cargando…</p>
   const u = datos.usuario
@@ -56,7 +73,20 @@ export function Perfil() {
 
       <section className="glass-card space-y-6 rounded-[2.5rem] p-6">
         <div className="flex flex-col items-center gap-2 text-center">
-          <Avatar nombre={u.nombre} />
+          <button
+            type="button"
+            onClick={() => {
+              setEleccion(null)
+              setEditandoAvatar((v) => !v)
+            }}
+            className="group relative rounded-full"
+            aria-label="Cambiar avatar"
+          >
+            <Avatar nombre={u.nombre} avatar={u.avatar} />
+            <span className="absolute right-0 bottom-0 flex h-9 w-9 items-center justify-center rounded-full border-2 border-fondo bg-primary text-fondo shadow-lg transition-transform group-hover:scale-110">
+              <Icono nombre="photo_camera" className="text-lg!" />
+            </span>
+          </button>
           <p className="mt-2 text-xl font-extrabold">@{u.username}</p>
           <div className="flex items-center gap-2">
             <EstadoUsuarioBadge estado={u.estado} />
@@ -66,6 +96,38 @@ export function Perfil() {
           </div>
           <p className="text-[11px] text-white/40">Tu usuario es el nombre que aparece en el ranking y no se puede cambiar.</p>
         </div>
+
+        {editandoAvatar && (
+          <div className="space-y-4 rounded-2xl border border-white/10 bg-black/30 p-4">
+            <p className="text-[10px] font-extrabold tracking-[0.15em] text-white/60 uppercase">Tu avatar</p>
+            <SelectorAvatar
+              nombre={u.nombre}
+              actual={u.avatar}
+              eleccion={eleccion}
+              onElegir={setEleccion}
+              permitirQuitar
+              ocupado={opAvatar.ocupado !== null}
+            />
+            {opAvatar.mensaje && <Alerta tipo={opAvatar.mensaje.tipo}>{opAvatar.mensaje.texto}</Alerta>}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setEditandoAvatar(false)}
+                className="rounded-xl border border-white/15 bg-white/5 py-3 text-xs font-black tracking-widest text-white/80 uppercase hover:border-white/40"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={guardarAvatar}
+                disabled={eleccion === null || opAvatar.ocupado !== null}
+                className="rounded-xl bg-primary py-3 text-xs font-black tracking-widest text-fondo uppercase disabled:opacity-40"
+              >
+                {opAvatar.ocupado ? 'Guardando…' : 'Guardar avatar'}
+              </button>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={guardar} className="space-y-4">
           <Campo etiqueta="Nombre completo" icono="badge" value={nombre} maxLength={100} required onChange={(e) => setNombre(e.target.value)} />

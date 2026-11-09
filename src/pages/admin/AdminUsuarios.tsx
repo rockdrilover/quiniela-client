@@ -3,8 +3,10 @@ import { Link } from 'react-router'
 
 import { usuariosApi, type DatosUsuario, type Pagina, type UsuarioAdmin } from '../../api/perfil'
 import { Alerta } from '../../components/Alerta'
+import { confirmarBloqueo, useConfirmar } from '../../components/Confirmar'
 import { Icono } from '../../components/Icono'
-import { Avatar, EstadoUsuarioBadge } from '../../components/PerfilPartes'
+import { Avatar } from '../../components/Avatar'
+import { EstadoUsuarioBadge } from '../../components/PerfilPartes'
 import { fechaHoraCorta } from '../../lib/fechas'
 import { useOperacion } from '../../lib/useOperacion'
 
@@ -27,6 +29,7 @@ export function AdminUsuarios() {
   const [conteos, setConteos] = useState<Record<DatosUsuario['estado'], number> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const op = useOperacion()
+  const confirmar = useConfirmar()
 
   // Espera a que deje de escribir antes de buscar
   useEffect(() => {
@@ -56,7 +59,7 @@ export function AdminUsuarios() {
   }, [cargar])
 
   async function accion(u: UsuarioAdmin, tipo: 'aprobar' | 'bloquear' | 'desbloquear') {
-    if (tipo === 'bloquear' && !window.confirm(`¿Bloquear a @${u.username}? Se cerrarán sus sesiones y no podrá entrar.`)) return
+    if (tipo === 'bloquear' && !(await confirmar(confirmarBloqueo(u.username)))) return
     const textos = { aprobar: 'aprobado', bloquear: 'bloqueado', desbloquear: 'desbloqueado' }
     const r = await op.ejecutar(`${tipo}-${u.id}`, () => usuariosApi.accion(u.id, tipo), `@${u.username} ${textos[tipo]}`)
     if (r) cargar()
@@ -122,7 +125,7 @@ export function AdminUsuarios() {
           {datos?.elementos.map((u) => (
             <li key={u.id} className="flex items-center gap-3 px-4 py-3">
               <Link to={`/admin/usuarios/${u.id}`} className="flex min-w-0 flex-1 items-center gap-3">
-                <Avatar nombre={u.nombre} tamano="chico" />
+                <Avatar nombre={u.nombre} avatar={u.avatar} tamano="chico" />
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 truncate text-sm font-bold">
                     @{u.username}
