@@ -3,7 +3,13 @@ import type { EstadoVisual, Jornada, Partido } from './jornadas'
 import type { Seleccion } from './quinielas'
 
 export type JornadaOpcion = { id: number; numero: number; nombre: string; estadoVisual: EstadoVisual }
-export type JornadasRanking = { actual: number | null; jornadas: JornadaOpcion[] }
+export type TorneoOpcion = { id: number; nombre: string; estado: 'proximo' | 'en_curso' | 'finalizado' }
+export type JornadasRanking = {
+  actual: number | null
+  idTorneo: number | null
+  torneos: TorneoOpcion[]
+  jornadas: JornadaOpcion[]
+}
 
 export type Celda = {
   idPartido: number
@@ -40,7 +46,8 @@ export type Ranking = {
 }
 
 export const rankingApi = {
-  jornadas: () => api<JornadasRanking>('/api/ranking/jornadas'),
+  jornadas: (idTorneo?: number) =>
+    api<JornadasRanking>(`/api/ranking/jornadas${idTorneo ? `?idTorneo=${idTorneo}` : ''}`),
   /** undefined si todavía no hay jornada publicada. */
   ver: (idJornada?: number) => api<Ranking | undefined>(`/api/ranking${idJornada ? `?idJornada=${idJornada}` : ''}`),
 }

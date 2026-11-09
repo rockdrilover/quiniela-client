@@ -7,6 +7,7 @@ import { ConfirmarProvider } from './components/Confirmar'
 import { AdminJornadas } from './pages/admin/AdminJornadas'
 import { AdminInicio } from './pages/admin/AdminInicio'
 import { AdminPagos } from './pages/admin/AdminPagos'
+import { AdminTorneos } from './pages/admin/AdminTorneos'
 import { AdminUsuario } from './pages/admin/AdminUsuario'
 import { AdminUsuarios } from './pages/admin/AdminUsuarios'
 import { Perfil } from './pages/Perfil'
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="/admin/jornadas" element={<RutaProtegida soloAdmin><AdminJornadas /></RutaProtegida>} />
               <Route path="/admin/jornadas/:id" element={<RutaProtegida soloAdmin><AdminPartidos /></RutaProtegida>} />
               <Route path="/admin/pagos" element={<RutaProtegida soloAdmin><AdminPagos /></RutaProtegida>} />
+              <Route path="/admin/torneos" element={<RutaProtegida soloAdmin><AdminTorneos /></RutaProtegida>} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -33,16 +33,24 @@ export type Partido = {
 }
 
 export type JornadaDetalle = { jornada: Jornada; partidos: Partido[] }
-export type ListaJornadas = { idTemporada: number; temporada: string; jornadas: Jornada[] }
+export type ListaJornadas = {
+  idTemporada: number
+  temporada: string
+  estadoTemporada: 'proximo' | 'en_curso' | 'finalizado'
+  jornadas: Jornada[]
+}
 
 export const jornadasApi = {
   equipos: () => api<Equipo[]>('/api/equipos'),
-  listar: () => api<ListaJornadas>('/api/admin/jornadas'),
+  listar: (idTemporada?: number) =>
+    api<ListaJornadas>(`/api/admin/jornadas${idTemporada ? `?idTemporada=${idTemporada}` : ''}`),
   detalle: (id: number) => api<JornadaDetalle>(`/api/admin/jornadas/${id}`),
-  crear: (datos: { nombre?: string; precio: number; pctPremio?: number }) =>
+  crear: (datos: { idTemporada?: number; nombre?: string; precio: number; pctPremio?: number }) =>
     api<JornadaDetalle>('/api/admin/jornadas', { metodo: 'POST', cuerpo: datos }),
   editar: (id: number, datos: { nombre?: string; precio: number; pctPremio?: number }) =>
     api<JornadaDetalle>(`/api/admin/jornadas/${id}`, { metodo: 'PUT', cuerpo: datos }),
+  renombrar: (id: number, nombre: string) =>
+    api<JornadaDetalle>(`/api/admin/jornadas/${id}/nombre`, { metodo: 'PUT', cuerpo: { nombre } }),
   eliminar: (id: number) => api<void>(`/api/admin/jornadas/${id}`, { metodo: 'DELETE' }),
   accion: (id: number, accion: 'abrir' | 'cerrar' | 'finalizar') =>
     api<JornadaDetalle>(`/api/admin/jornadas/${id}/${accion}`, { metodo: 'POST' }),

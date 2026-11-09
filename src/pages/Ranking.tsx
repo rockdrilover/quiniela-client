@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 
 import type { Partido } from '../api/jornadas'
-import { rankingApi, type Celda, type FilaRanking, type JornadaOpcion, type Ranking as RankingDatos } from '../api/ranking'
+import {
+  rankingApi,
+  type Celda,
+  type FilaRanking,
+  type JornadaOpcion,
+  type Ranking as RankingDatos,
+  type TorneoOpcion,
+} from '../api/ranking'
 import { Alerta } from '../components/Alerta'
 import { Avatar } from '../components/Avatar'
 import { EstadoJornadaBadge } from '../components/EstadoJornadaBadge'
@@ -12,6 +19,8 @@ const pesos = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN
 /** Pantalla 9: ranking de la jornada con la rejilla de pronósticos (columnas fijas a los lados). */
 export function Ranking() {
   const [opciones, setOpciones] = useState<JornadaOpcion[]>([])
+  const [torneos, setTorneos] = useState<TorneoOpcion[]>([])
+  const [idTorneo, setIdTorneo] = useState<number | null>(null)
   const [idJornada, setIdJornada] = useState<number | undefined>(undefined)
   const [datos, setDatos] = useState<RankingDatos | null | undefined>(undefined) // undefined = cargando, null = no hay
   const [error, setError] = useState<string | null>(null)
@@ -19,9 +28,27 @@ export function Ranking() {
   useEffect(() => {
     rankingApi
       .jornadas()
-      .then((j) => setOpciones(j.jornadas))
+      .then((j) => {
+        setOpciones(j.jornadas)
+        setTorneos(j.torneos)
+        setIdTorneo(j.idTorneo)
+      })
       .catch(() => {})
   }, [])
+
+  /** Otro torneo: se muestran sus jornadas y se abre la más reciente. */
+  async function cambiarTorneo(id: number) {
+    setIdTorneo(id)
+    try {
+      const j = await rankingApi.jornadas(id)
+      setOpciones(j.jornadas)
+      setDatos(undefined)
+      setIdJornada(j.jornadas[0]?.id)
+      if (j.jornadas.length === 0) setDatos(null)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
 
   useEffect(() => {
     let vivo = true
@@ -43,6 +70,25 @@ export function Ranking() {
   return (
     <div className="space-y-5">
       <div className="space-y-3 text-center">
+        {torneos.length > 1 && (
+          <div>
+            <label className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 py-1.5 pr-2 pl-4">
+              <Icono nombre="emoji_events" className="text-base! text-primary" />
+              <select
+                aria-label="Torneo"
+                value={idTorneo ?? ''}
+                onChange={(e) => cambiarTorneo(Number(e.target.value))}
+                className="bg-transparent pr-1 text-xs font-black tracking-widest text-white uppercase outline-none [&>option]:bg-fondo"
+              >
+                {torneos.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
         {opciones.length > 0 && (
           <label className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 py-1.5 pr-2 pl-4">
             <Icono nombre="calendar_month" className="text-base! text-primary" />

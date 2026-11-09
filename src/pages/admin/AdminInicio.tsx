@@ -20,6 +20,7 @@ export function AdminInicio() {
   }, [])
 
   const accesos = [
+    { a: '/admin/torneos', icono: 'emoji_events', titulo: 'Torneos', texto: 'Crea torneos (Apertura, Clausura…) e inicia o finaliza cada uno' },
     { a: '/admin/jornadas', icono: 'calendar_month', titulo: 'Jornadas y partidos', texto: 'Crea jornadas, arma partidos y captura resultados' },
     { a: '/admin/pagos', icono: 'payments', titulo: 'Validación de pagos', texto: 'Revisa comprobantes y valida quinielas', aviso: pendientes?.pagos },
     { a: '/admin/usuarios', icono: 'group', titulo: 'Usuarios', texto: 'Aprueba registros, bloquea o edita cuentas', aviso: pendientes?.usuarios },
