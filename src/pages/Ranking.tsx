@@ -277,7 +277,7 @@ function Leyenda() {
   )
   return (
     <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-[10px] text-white/50">
-      {item('bg-primary ring-1 ring-primary ring-offset-1 ring-offset-[#0e1712]', 'Exacto +3', true)}
+      {item('bg-primary ring-1 ring-primary ring-offset-1 ring-offset-[#0e1712]', 'Exacto +1', true)}
       {item('bg-primary/80', 'Resultado +1')}
       {item('border border-red-500/30 bg-red-500/20', 'Fallo 0')}
       {item('bg-white/10', 'Sin marcador')}

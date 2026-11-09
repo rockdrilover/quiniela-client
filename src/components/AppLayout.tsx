@@ -12,6 +12,7 @@ export function AppLayout() {
   const items = [
     { a: '/', icono: 'sports_soccer', texto: 'Quiniela', fin: true },
     { a: '/ranking', icono: 'leaderboard', texto: 'Resultados', fin: false },
+    { a: '/como-se-juega', icono: 'menu_book', texto: 'Reglas', fin: false },
     ...(usuario.rol === 'admin' ? [{ a: '/admin', icono: 'admin_panel_settings', texto: 'Admin', fin: false }] : []),
     { a: '/perfil', icono: 'person', texto: 'Perfil', fin: false },
   ]

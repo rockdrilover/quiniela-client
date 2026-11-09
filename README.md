@@ -9,6 +9,17 @@ React 19 · TypeScript · Vite · Tailwind CSS 4 · React Router
 
 En desarrollo, Vite reenvía `/api` a `http://localhost:8080`, así que no hay que configurar nada más.
 
+## Manual del jugador (PDF)
+
+La pantalla pública `/como-se-juega` explica cómo se juega y cómo se decide al ganador. Su botón
+"Descargar PDF" entrega `public/manual-quiniela-liga-mx.pdf`, que se genera de esa misma pantalla
+(modo `?imprimir`, mismos colores de la app). **Si cambias las reglas o el texto, regenéralo** con el
+front corriendo (`npm run dev`) y Chrome o Edge instalados:
+
+```bash
+npm run pdf
+```
+
 ## Producción
 
 `npm run build` genera `dist/` (archivos estáticos para S3 + CloudFront o cualquier hosting).

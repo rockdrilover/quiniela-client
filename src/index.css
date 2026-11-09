@@ -55,3 +55,34 @@ body {
     user-select: none;
   }
 }
+
+/* Manual en modo documento (?imprimir): se usa para generar el PDF con los mismos colores de la app */
+@page {
+  size: letter;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    background: #0a110d;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+.manual-imprimir .glass-card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.manual-imprimir .manual-bloque {
+  break-inside: avoid;
+}
+
+/* Salto de página con aire arriba: el padding sí se conserva al inicio de la hoja (el margin no) */
+.manual-imprimir .manual-nueva-pagina {
+  break-before: page;
+  padding-top: 2.5rem;
+}

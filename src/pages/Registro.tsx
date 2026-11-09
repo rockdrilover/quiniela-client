@@ -8,6 +8,7 @@ import { Alerta } from '../components/Alerta'
 import { AuthLayout } from '../components/AuthLayout'
 import { BotonPrimario } from '../components/Boton'
 import { Campo } from '../components/Campo'
+import { Icono } from '../components/Icono'
 import { passwordValida } from '../auth/password'
 import { ReglasPassword } from '../components/ReglasPassword'
 import { SelectorAvatar } from '../components/SelectorAvatar'
@@ -176,6 +177,12 @@ export function Registro() {
       <p className="mt-6 text-center text-xs text-white/50">
         Tu cuenta quedará pendiente hasta que un administrador la apruebe.
       </p>
+      <Link
+        to="/como-se-juega"
+        className="mt-3 flex items-center justify-center gap-1.5 text-xs font-bold text-white/50 transition-colors hover:text-primary"
+      >
+        <Icono nombre="menu_book" className="text-base!" /> ¿Cómo se juega?
+      </Link>
     </AuthLayout>
   )
 }

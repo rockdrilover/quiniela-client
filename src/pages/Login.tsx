@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthContext'
 import { Alerta } from '../components/Alerta'
 import { AuthLayout } from '../components/AuthLayout'
 import { Campo } from '../components/Campo'
+import { Icono } from '../components/Icono'
 
 export function Login() {
   const { entrar } = useAuth()
@@ -115,6 +116,12 @@ export function Login() {
           Regístrate
         </Link>
       </p>
+      <Link
+        to="/como-se-juega"
+        className="mt-4 flex items-center justify-center gap-1.5 text-xs font-bold text-white/50 transition-colors hover:text-primary"
+      >
+        <Icono nombre="menu_book" className="text-base!" /> ¿Cómo se juega?
+      </Link>
     </AuthLayout>
   )
 }

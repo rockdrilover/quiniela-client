@@ -11,6 +11,7 @@ import { AdminUsuario } from './pages/admin/AdminUsuario'
 import { AdminUsuarios } from './pages/admin/AdminUsuarios'
 import { Perfil } from './pages/Perfil'
 import { AdminPartidos } from './pages/admin/AdminPartidos'
+import { ComoSeJuega } from './pages/ComoSeJuega'
 import { Inicio } from './pages/Inicio'
 import { Login } from './pages/Login'
 import { Pronosticos } from './pages/Pronosticos'
@@ -27,6 +28,7 @@ export default function App() {
             <Route path="/login" element={<SoloAnonimo><Login /></SoloAnonimo>} />
             <Route path="/registro" element={<SoloAnonimo><Registro /></SoloAnonimo>} />
             <Route path="/recuperar" element={<Recuperar />} />
+            <Route path="/como-se-juega" element={<ComoSeJuega />} />
 
             <Route element={<RutaProtegida><AppLayout /></RutaProtegida>}>
               <Route path="/" element={<Inicio />} />
