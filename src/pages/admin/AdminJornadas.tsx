@@ -114,11 +114,15 @@ export function AdminJornadas() {
       <section className="glass-card space-y-3 rounded-2xl p-5">
         <div className="flex items-center justify-between gap-3">
           <span className="text-[10px] font-extrabold tracking-[0.15em] text-white/60 uppercase">Torneo</span>
-          <Link to="/admin/torneos" className="text-xs font-bold text-primary hover:underline">
-            Administrar torneos
+          <Link
+            to="/admin/torneos"
+            className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[11px] font-black tracking-wider text-primary uppercase transition-colors hover:bg-primary/20"
+          >
+            <Icono nombre="emoji_events" className="text-base!" /> Administrar torneos
           </Link>
         </div>
         <div className="flex items-center gap-3">
+          <div className="relative min-w-0 flex-1">
           <select
             aria-label="Torneo"
             value={datos?.idTemporada ?? ''}
@@ -126,7 +130,7 @@ export function AdminJornadas() {
               op.limpiar()
               setParams({ torneo: e.target.value }, { replace: true })
             }}
-            className="h-12 min-w-0 flex-1 rounded-xl border border-white/10 bg-black/40 px-3 text-sm font-bold text-white outline-none focus:border-primary"
+            className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-white/10 bg-black/40 pr-10 pl-4 text-sm font-bold text-white transition-colors outline-none hover:border-white/30 focus:border-primary focus:ring-1 focus:ring-primary [&>option]:bg-[#0d1611]"
           >
             {datos && !torneos.some((t) => t.id === datos.idTemporada) && <option value={datos.idTemporada}>{datos.temporada}</option>}
             {torneos.map((t) => (
@@ -135,6 +139,8 @@ export function AdminJornadas() {
               </option>
             ))}
           </select>
+          <Icono nombre="expand_more" className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xl! text-primary" />
+          </div>
           {datos && (
             <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-widest uppercase ${ESTADOS_TORNEO[datos.estadoTemporada].clase}`}>
               {ESTADOS_TORNEO[datos.estadoTemporada].texto}

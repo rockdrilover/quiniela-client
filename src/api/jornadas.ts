@@ -65,4 +65,5 @@ export const jornadasApi = {
   resultado: (id: number, golesLocal: number, golesVisitante: number) =>
     api<JornadaDetalle>(`/api/admin/partidos/${id}/resultado`, { metodo: 'PUT', cuerpo: { golesLocal, golesVisitante } }),
   suspender: (id: number) => api<JornadaDetalle>(`/api/admin/partidos/${id}/suspender`, { metodo: 'POST' }),
+  reactivar: (id: number) => api<JornadaDetalle>(`/api/admin/partidos/${id}/reactivar`, { metodo: 'POST' }),
 }

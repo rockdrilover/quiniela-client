@@ -231,11 +231,11 @@ function FormTorneo(props: {
       <div className="grid grid-cols-2 gap-3">
         <label className="block space-y-2">
           <span className={ETIQUETA}>Inicio (opcional)</span>
-          <input className={CAMPO} type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} />
+          <input className={`${CAMPO} scheme-dark`} type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} />
         </label>
         <label className="block space-y-2">
           <span className={ETIQUETA}>Fin (opcional)</span>
-          <input className={CAMPO} type="date" value={fin} min={inicio || undefined} onChange={(e) => setFin(e.target.value)} />
+          <input className={`${CAMPO} scheme-dark`} type="date" value={fin} min={inicio || undefined} onChange={(e) => setFin(e.target.value)} />
         </label>
       </div>
       {fechasMal && <p className="ml-1 text-xs text-red-300">La fecha de fin no puede ser antes del inicio.</p>}

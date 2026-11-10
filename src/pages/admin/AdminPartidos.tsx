@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
 
-import { jornadasApi, type Equipo, type JornadaDetalle, type Partido } from '../../api/jornadas'
+import { jornadasApi, type Equipo, type Jornada, type JornadaDetalle, type Partido } from '../../api/jornadas'
 import { Alerta } from '../../components/Alerta'
 import { useConfirmar } from '../../components/Confirmar'
 import { EquipoChip } from '../../components/EquipoChip'
 import { EstadoJornadaBadge } from '../../components/EstadoJornadaBadge'
 import { Icono } from '../../components/Icono'
+import { SelectorEquipo } from '../../components/SelectorEquipo'
 import { aInputLocal, deInputLocal, fechaHoraCorta } from '../../lib/fechas'
 import { useOperacion } from '../../lib/useOperacion'
 
@@ -43,6 +44,11 @@ export function AdminPartidos() {
     if (r) setDatos(r)
     return r
   }
+
+  // Los errores se muestran arriba: si la acción se lanzó desde abajo (p. ej. Activar jornada), sube para verlos
+  useEffect(() => {
+    if (op.mensaje?.tipo === 'error') window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [op.mensaje])
 
   if (errorCarga) {
     return <Alerta tipo="error">{errorCarga}</Alerta>
@@ -81,6 +87,15 @@ export function AdminPartidos() {
         </Alerta>
       )}
       {j.estado === 'finalizada' && <Alerta tipo="exito">Jornada finalizada: los marcadores y el ranking ya son definitivos.</Alerta>}
+
+      <DatosJornada
+        key={`${j.precio}-${j.pctPremio}`}
+        j={j}
+        ocupado={op.ocupado === 'datos'}
+        onGuardar={(precio, pctPremio) =>
+          actualizar('datos', () => jornadasApi.editar(j.id, { precio, pctPremio }), 'Precio y premio actualizados')
+        }
+      />
 
       {enBorrador && (
         <NuevoPartido
@@ -127,7 +142,48 @@ export function AdminPartidos() {
               numero={i + 1}
               partido={p}
               habilitado={capturaResultados}
-              ocupado={op.ocupado === `r-${p.id}` || op.ocupado === `s-${p.id}`}
+              ocupado={op.ocupado === `r-${p.id}` || op.ocupado === `s-${p.id}` || op.ocupado === `a-${p.id}`}
+              onReactivar={
+                j.estado === 'finalizada'
+                  ? undefined
+                  : async () => {
+                      const ok = await confirmar({
+                        titulo: 'Reactivar partido',
+                        mensaje: <><strong>{p.local.nombre} vs {p.visitante.nombre}</strong> vuelve a contar para puntos y podrás capturar su marcador.</>,
+                        confirmar: 'Reactivar',
+                        icono: 'restart_alt',
+                      })
+                      if (ok) actualizar(`a-${p.id}`, () => jornadasApi.reactivar(p.id), 'Partido reactivado')
+                    }
+              }
+              edicion={
+                j.estado === 'finalizada'
+                  ? undefined
+                  : {
+                      equipos,
+                      ocupados,
+                      soloFecha: !j.aceptaPronosticos,
+                      ocupado: op.ocupado === `p-${p.id}`,
+                      onGuardar: async (d) => {
+                        const cambianEquipos = d.idLocal !== p.local.id || d.idVisitante !== p.visitante.id
+                        if (cambianEquipos && j.totalQuinielas > 0) {
+                          const ok = await confirmar({
+                            titulo: 'Cambiar equipos',
+                            mensaje: (
+                              <>
+                                Ya hay <strong>{j.totalQuinielas}</strong> {j.totalQuinielas === 1 ? 'quiniela' : 'quinielas'} en esta jornada. Sus
+                                pronósticos de este partido se conservan; avisa a los jugadores para que los revisen.
+                              </>
+                            ),
+                            confirmar: 'Cambiar',
+                            icono: 'swap_horiz',
+                          })
+                          if (!ok) return undefined
+                        }
+                        return actualizar(`p-${p.id}`, () => jornadasApi.editarPartido(p.id, d), 'Partido actualizado')
+                      },
+                    }
+              }
               onGuardar={(gl, gv) =>
                 actualizar(
                   `r-${p.id}`,
@@ -177,41 +233,100 @@ export function AdminPartidos() {
   )
 }
 
+// ---------------------------------------------------------------- datos de la jornada
+
+/** Precio por quiniela y % a premios. Se pueden corregir hasta finalizar (el precio, mientras nadie haya pagado). */
+function DatosJornada(props: { j: Jornada; ocupado: boolean; onGuardar: (precio: number, pct: number) => Promise<unknown> }) {
+  const { j } = props
+  const [editando, setEditando] = useState(false)
+  const [precio, setPrecio] = useState(String(j.precio))
+  const [pct, setPct] = useState(String(j.pctPremio))
+  const editable = j.estado !== 'finalizada'
+  const valido = Number(precio) >= 1 && pct !== '' && Number(pct) >= 0 && Number(pct) <= 100
+  const campo =
+    'w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-base text-white outline-none focus:border-primary focus:ring-1 focus:ring-primary'
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!valido) return
+    if (await props.onGuardar(Number(precio), Number(pct))) setEditando(false)
+  }
+
+  if (!editando) {
+    return (
+      <section className="glass-card flex items-center gap-4 rounded-2xl px-5 py-4">
+        <div className="flex flex-1 gap-6">
+          <div>
+            <p className="text-[10px] font-extrabold tracking-[0.15em] text-white/50 uppercase">Precio</p>
+            <p className="text-lg font-black">${j.precio}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-extrabold tracking-[0.15em] text-white/50 uppercase">A premios</p>
+            <p className="text-lg font-black">{j.pctPremio}%</p>
+          </div>
+        </div>
+        {editable && (
+          <button
+            type="button"
+            onClick={() => setEditando(true)}
+            className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[11px] font-black tracking-wider text-primary uppercase hover:bg-primary/20"
+          >
+            <Icono nombre="edit" className="text-base!" /> Editar
+          </button>
+        )}
+      </section>
+    )
+  }
+
+  return (
+    <section className="glass-card space-y-4 rounded-2xl p-5">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block space-y-2">
+            <span className="ml-1 text-[10px] font-extrabold tracking-[0.15em] text-white/60 uppercase">Precio ($)</span>
+            <input className={campo} type="number" inputMode="decimal" min={1} step="0.01" required value={precio} onChange={(e) => setPrecio(e.target.value)} />
+          </label>
+          <label className="block space-y-2">
+            <span className="ml-1 text-[10px] font-extrabold tracking-[0.15em] text-white/60 uppercase">% a premios</span>
+            <input className={campo} type="number" inputMode="numeric" min={0} max={100} required value={pct} onChange={(e) => setPct(e.target.value)} />
+          </label>
+        </div>
+        {j.estado !== 'borrador' && (
+          <p className="ml-1 text-xs text-white/40">
+            Las quinielas que aún no pagan toman el precio nuevo. Si alguien ya pagó o mandó comprobante, el precio ya no se puede cambiar.
+          </p>
+        )}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setPrecio(String(j.precio))
+              setPct(String(j.pctPremio))
+              setEditando(false)
+            }}
+            className="flex-1 rounded-xl border border-white/15 bg-white/5 py-3 text-xs font-black tracking-widest text-white/80 uppercase"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={!valido || props.ocupado}
+            className="flex-1 rounded-xl bg-primary py-3 text-xs font-black tracking-widest text-fondo uppercase disabled:opacity-50"
+          >
+            {props.ocupado ? 'Guardando…' : 'Guardar'}
+          </button>
+        </div>
+      </form>
+    </section>
+  )
+}
+
 // ---------------------------------------------------------------- borrador
 
 type DatosPartido = { idLocal: number; idVisitante: number; fechaHora: string }
 
 const SELECT =
   'h-14 w-full min-w-0 rounded-xl border border-white/10 bg-black/40 px-3 text-sm text-white outline-none focus:border-primary focus:ring-1 focus:ring-primary'
-
-function SelectorEquipo(props: {
-  valor: number | ''
-  equipos: Equipo[]
-  deshabilitados: Set<number>
-  /** Equipos que ya tienen otro partido en la jornada (se marcan "ya juega"). */
-  yaJuegan: Set<number>
-  placeholder: string
-  onCambio: (id: number) => void
-}) {
-  return (
-    <select
-      className={SELECT}
-      value={props.valor}
-      onChange={(e) => props.onCambio(Number(e.target.value))}
-      aria-label={props.placeholder}
-    >
-      <option value="" disabled className="bg-[#121212]">
-        {props.placeholder}
-      </option>
-      {props.equipos.map((e) => (
-        <option key={e.id} value={e.id} disabled={props.deshabilitados.has(e.id)} className="bg-[#121212]">
-          {e.nombre}
-          {props.yaJuegan.has(e.id) ? ' (ya juega)' : ''}
-        </option>
-      ))}
-    </select>
-  )
-}
 
 function FormPartido(props: {
   inicial?: Partido
@@ -221,6 +336,9 @@ function FormPartido(props: {
   textoBoton: string
   onEnviar: (d: DatosPartido) => Promise<unknown>
   limpiarAlEnviar?: boolean
+  /** Con la jornada ya sin pronósticos solo se puede mover la fecha. */
+  soloFecha?: boolean
+  onCancelar?: () => void
 }) {
   const [local, setLocal] = useState<number | ''>(props.inicial?.local.id ?? '')
   const [visita, setVisita] = useState<number | ''>(props.inicial?.visitante.id ?? '')
@@ -246,14 +364,15 @@ function FormPartido(props: {
   return (
     <form onSubmit={onSubmit} className="space-y-3">
       <div className="flex items-center gap-2">
-        <div className="flex-1">
-          <SelectorEquipo valor={local} equipos={props.equipos} yaJuegan={bloqueados} deshabilitados={new Set([...bloqueados, ...(visita ? [visita] : [])])} placeholder="Local" onCambio={setLocal} />
+        <div className="min-w-0 flex-1">
+          <SelectorEquipo valor={local} equipos={props.equipos} yaJuegan={bloqueados} deshabilitados={new Set([...bloqueados, ...(visita ? [visita] : [])])} placeholder="Local" bloqueado={props.soloFecha} onCambio={setLocal} />
         </div>
         <span className="text-xs font-black text-primary italic">VS</span>
-        <div className="flex-1">
-          <SelectorEquipo valor={visita} equipos={props.equipos} yaJuegan={bloqueados} deshabilitados={new Set([...bloqueados, ...(local ? [local] : [])])} placeholder="Visitante" onCambio={setVisita} />
+        <div className="min-w-0 flex-1">
+          <SelectorEquipo valor={visita} equipos={props.equipos} yaJuegan={bloqueados} deshabilitados={new Set([...bloqueados, ...(local ? [local] : [])])} placeholder="Visitante" alinear="der" bloqueado={props.soloFecha} onCambio={setVisita} />
         </div>
       </div>
+      {props.soloFecha && <p className="ml-1 text-xs text-white/40">La jornada ya no recibe pronósticos: solo puedes mover la fecha.</p>}
       <div className="flex gap-2">
         <input
           type="datetime-local"
@@ -262,6 +381,15 @@ function FormPartido(props: {
           value={fecha}
           onChange={(e) => setFecha(e.target.value)}
         />
+        {props.onCancelar && (
+          <button
+            type="button"
+            onClick={props.onCancelar}
+            className="shrink-0 rounded-xl border border-white/15 bg-white/5 px-3 text-xs font-black tracking-wider text-white/70 uppercase hover:border-white/40"
+          >
+            Cancelar
+          </button>
+        )}
         {(!props.inicial || cambio) && (
           <button
             type="submit"
@@ -317,7 +445,7 @@ function NuevoPartido(props: {
   onAgregar: (d: DatosPartido) => Promise<unknown>
 }) {
   return (
-    <section className="glass-card space-y-4 rounded-2xl p-5">
+    <section className="glass-card relative z-20 space-y-4 rounded-2xl p-5">
       <div className="flex items-center gap-2">
         <Icono nombre="add_circle" className="text-primary" />
         <h2 className="text-sm font-black tracking-widest uppercase">Crear partido</h2>
@@ -336,8 +464,19 @@ function PartidoResultado(props: {
   ocupado: boolean
   onGuardar: (gl: number, gv: number) => Promise<unknown>
   onSuspender: () => void
+  /** Deshace la suspensión (solo si la jornada no está finalizada). */
+  onReactivar?: () => void
+  /** Corrección del partido (equipos y fecha) con la jornada activa o cerrada. */
+  edicion?: {
+    equipos: Equipo[]
+    ocupados: Set<number>
+    soloFecha: boolean
+    ocupado: boolean
+    onGuardar: (d: DatosPartido) => Promise<unknown>
+  }
 }) {
   const p = props.partido
+  const [editando, setEditando] = useState(false)
   const [gl, setGl] = useState(p.golesLocal?.toString() ?? '')
   const [gv, setGv] = useState(p.golesVisitante?.toString() ?? '')
   const finalizado = p.estado === 'finalizado'
@@ -361,15 +500,63 @@ function PartidoResultado(props: {
     />
   )
 
+  const puedeEditar = !!props.edicion && p.estado === 'programado'
+
+  if (editando && props.edicion) {
+    const e = props.edicion
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">Editar partido {props.numero}</span>
+        </div>
+        <FormPartido
+          inicial={p}
+          equipos={e.equipos}
+          ocupados={e.ocupados}
+          ocupado={e.ocupado}
+          soloFecha={e.soloFecha}
+          textoBoton="Guardar"
+          onCancelar={() => setEditando(false)}
+          onEnviar={async (d) => {
+            const r = await e.onGuardar(d)
+            if (r) setEditando(false)
+            return r
+          }}
+        />
+      </div>
+    )
+  }
+
   return (
-    <div className={`space-y-3 ${suspendido ? 'opacity-50' : ''}`}>
+    <div className="space-y-3">
       <div className="flex items-center justify-between px-1">
         <span className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">Partido {props.numero}</span>
-        <span className="text-[10px] font-bold text-white/40 uppercase">
-          {suspendido ? 'Suspendido' : finalizado ? 'Final' : fechaHoraCorta(p.fechaHora)}
-        </span>
+        <div className="flex items-center gap-3">
+          {suspendido && props.onReactivar && (
+            <button
+              type="button"
+              onClick={props.onReactivar}
+              disabled={props.ocupado}
+              className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-2 py-1 text-[10px] font-black tracking-wider text-primary uppercase hover:bg-primary/20 disabled:opacity-40"
+            >
+              <Icono nombre="restart_alt" className="text-sm!" /> Reactivar
+            </button>
+          )}
+          <span className="text-[10px] font-bold text-white/40 uppercase">
+            {suspendido ? 'Suspendido' : finalizado ? 'Final' : fechaHoraCorta(p.fechaHora)}
+          </span>
+          {puedeEditar && (
+            <button
+              type="button"
+              onClick={() => setEditando(true)}
+              className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-2 py-1 text-[10px] font-black tracking-wider text-primary uppercase hover:bg-primary/20"
+            >
+              <Icono nombre="edit" className="text-sm!" /> Editar
+            </button>
+          )}
+        </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className={`flex items-center gap-2 ${suspendido ? 'opacity-50' : ''}`}>
         <div className="flex-1">
           <EquipoChip equipo={p.local} />
         </div>

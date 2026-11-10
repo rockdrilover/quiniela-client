@@ -13,6 +13,7 @@ import { Alerta } from '../components/Alerta'
 import { Avatar } from '../components/Avatar'
 import { EstadoJornadaBadge } from '../components/EstadoJornadaBadge'
 import { Icono } from '../components/Icono'
+import { LogoEquipo } from '../components/LogoEquipo'
 
 const pesos = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })
 
@@ -242,15 +243,14 @@ function Rejilla({ datos }: { datos: RankingDatos }) {
   )
 }
 
-/** Siglas de los equipos y, abajo, el marcador real (o la hora si no se ha jugado). */
+/** Escudos de los equipos y, abajo, el marcador real (o la hora si no se ha jugado). */
 function Encabezado({ p }: { p: Partido }) {
   return (
     <div className="flex flex-col items-center justify-center gap-1 border-b border-white/10 bg-white/5 px-1 py-2 text-center">
-      <span className="text-[9px] leading-tight font-bold text-white/70">
-        {p.local.abreviatura}
-        <br />
-        {p.visitante.abreviatura}
-      </span>
+      <div className="flex flex-col items-center gap-0.5" title={`${p.local.nombre} vs ${p.visitante.nombre}`}>
+        <LogoEquipo equipo={p.local} tamano="chico" />
+        <LogoEquipo equipo={p.visitante} tamano="chico" />
+      </div>
       {p.estado === 'finalizado' ? (
         <span className="rounded bg-white/10 px-1.5 text-[10px] font-black text-white">
           {p.golesLocal}-{p.golesVisitante}
