@@ -49,8 +49,8 @@ export function ComoSeJuega() {
 
   return (
     <div className={`relative isolate min-h-dvh ${imprimir ? 'manual-imprimir bg-fondo' : ''}`}>
-      <div className={`fondo-estadio -z-20 opacity-60 ${imprimir ? 'absolute' : 'fixed'} inset-0`} />
-      <div className={`fondo-overlay -z-10 ${imprimir ? 'absolute' : 'fixed'} inset-0`} />
+      <div className={`${imprimir ? 'fondo-estadio absolute opacity-60' : 'fondo-foto fixed'} -z-20 inset-0`} />
+      <div className={`${imprimir ? 'fondo-overlay absolute' : 'fondo-overlay-claro fixed'} -z-10 inset-0`} />
 
       {!imprimir && (
         <header className="sticky top-0 z-40 border-b border-white/10 bg-black/40 backdrop-blur-md">

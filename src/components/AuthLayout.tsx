@@ -8,8 +8,8 @@ const ICONOS_EQUIPOS = ['shield', 'swords', 'bolt', 'eco', 'castle', 'star', 'ho
 export function AuthLayout({ titulo, subtitulo, children }: { titulo: string; subtitulo?: string; children: ReactNode }) {
   return (
     <div className="relative isolate flex min-h-dvh w-full flex-col items-center overflow-hidden px-4 py-10 sm:px-5">
-      <div className="fondo-estadio absolute inset-0 -z-20 scale-105" />
-      <div className="fondo-overlay absolute inset-0 -z-10" />
+      <div className="fondo-foto absolute inset-0 -z-20" />
+      <div className="fondo-overlay-claro absolute inset-0 -z-10" />
 
       <header className="mt-auto mb-10 flex flex-col items-center">
         <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary shadow-[0_0_50px_rgba(19,236,91,0.5)]">

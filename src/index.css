@@ -56,6 +56,16 @@ body {
   }
 }
 
+/* Foto de estadio de noche con las luces encendidas: login y pantallas con sesión */
+.fondo-foto {
+  background: url('/fondos/estadio.jpg') center / cover no-repeat, #05090f;
+}
+
+/* Capa oscura más ligera para que el fondo se vea sin perder legibilidad */
+.fondo-overlay-claro {
+  background: linear-gradient(to bottom, rgba(10, 17, 13, 0.55) 0%, rgba(10, 17, 13, 0.3) 45%, rgba(10, 17, 13, 0.8) 100%);
+}
+
 /* Manual en modo documento (?imprimir): se usa para generar el PDF con los mismos colores de la app */
 @page {
   size: letter;

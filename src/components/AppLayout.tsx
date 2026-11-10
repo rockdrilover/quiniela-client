@@ -19,8 +19,8 @@ export function AppLayout() {
 
   return (
     <div className="relative isolate min-h-dvh">
-      <div className="fondo-estadio fixed inset-0 -z-20 opacity-60" />
-      <div className="fondo-overlay fixed inset-0 -z-10" />
+      <div className="fondo-foto fixed inset-0 -z-20" />
+      <div className="fondo-overlay-claro fixed inset-0 -z-10" />
 
       <header className="sticky top-0 z-40 border-b border-white/10 bg-black/40 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
