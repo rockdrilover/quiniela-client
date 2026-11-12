@@ -96,3 +96,42 @@ body {
   break-before: page;
   padding-top: 2.5rem;
 }
+
+/* Barra de desplazamiento delgada con los colores de la app (tabla de Resultados) */
+.scroll-tema {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(19, 236, 91, 0.6) rgba(255, 255, 255, 0.05);
+}
+.scroll-tema::-webkit-scrollbar {
+  height: 8px;
+}
+.scroll-tema::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+.scroll-tema::-webkit-scrollbar-thumb {
+  background: rgba(19, 236, 91, 0.6);
+  border-radius: 9999px;
+}
+
+/* Balón del login: el balón bota dentro del cuadro (que no se mueve), se aplasta al tocar el piso y su sombra crece */
+@keyframes balon-bota {
+  0%, 100% { transform: translateY(8px) scale(1.08, 0.92); animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0); }
+  8% { transform: translateY(8px) scale(1, 1); animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1); }
+  50% { transform: translateY(-10px) scale(1, 1); animation-timing-function: cubic-bezier(0.32, 0, 0.67, 0); }
+  92% { transform: translateY(8px) scale(1, 1); }
+}
+@keyframes balon-sombra {
+  0%, 100% { transform: scaleX(1); opacity: 0.9; }
+  50% { transform: scaleX(0.6); opacity: 0.4; }
+}
+@keyframes balon-gira {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.balon-bota { animation: balon-bota 1.6s infinite; transform-origin: 50% 100%; }
+.balon-sombra { animation: balon-sombra 1.6s ease-in-out infinite; }
+.balon-gira { animation: balon-gira 6s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .balon-bota, .balon-sombra, .balon-gira { animation: none; }
+}

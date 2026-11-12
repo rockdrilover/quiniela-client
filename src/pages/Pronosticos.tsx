@@ -169,7 +169,7 @@ export function Pronosticos() {
         <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-white/60">
           <span className="font-bold text-white">{quiniela ? `Quiniela ${quiniela.numero}` : 'Nueva quiniela'}</span>
           {quiniela && <span>#{quiniela.folio}</span>}
-          {quiniela && <EstadoQuinielaBadge estado={quiniela.estado} />}
+          {quiniela && <EstadoQuinielaBadge estado={quiniela.estado} jornada={j.estadoVisual} />}
         </div>
         {quiniela?.puntos !== null && quiniela?.puntos !== undefined && (
           <p className="mt-3 text-sm">

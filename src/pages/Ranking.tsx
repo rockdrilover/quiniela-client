@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { Partido } from '../api/jornadas'
 import {
@@ -192,9 +192,38 @@ function Rejilla({ datos }: { datos: RankingDatos }) {
   const fondo = (mia: boolean) => (mia ? 'bg-[#123321]' : 'bg-[#0e1712]')
   const fijoDer = 'sticky right-0 z-10 backdrop-blur-md border-l border-white/10'
 
+  // Desplazamiento horizontal: barra visible y flechas para quien usa mouse
+  const caja = useRef<HTMLDivElement>(null)
+  const [lados, setLados] = useState({ izq: false, der: false })
+  const medir = useCallback(() => {
+    const el = caja.current
+    if (!el) return
+    setLados({ izq: el.scrollLeft > 4, der: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 })
+  }, [])
+  useEffect(() => {
+    medir()
+    window.addEventListener('resize', medir)
+    return () => window.removeEventListener('resize', medir)
+  }, [medir, datos])
+  const mover = (dir: 1 | -1) => caja.current?.scrollBy({ left: dir * 180, behavior: 'smooth' })
+  const flecha =
+    'flex h-8 w-8 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-primary transition-opacity hover:bg-primary/20 disabled:opacity-25'
+
   return (
+    <div className="space-y-2">
+    {(lados.izq || lados.der) && (
+      <div className="flex items-center justify-end gap-2">
+        <span className="mr-1 text-[10px] font-bold tracking-widest text-white/40 uppercase">Desliza para ver todos los partidos</span>
+        <button type="button" aria-label="Ver partidos anteriores" disabled={!lados.izq} onClick={() => mover(-1)} className={flecha}>
+          <Icono nombre="chevron_left" className="text-xl!" />
+        </button>
+        <button type="button" aria-label="Ver más partidos" disabled={!lados.der} onClick={() => mover(1)} className={flecha}>
+          <Icono nombre="chevron_right" className="text-xl!" />
+        </button>
+      </div>
+    )}
     <div className="glass-card -mx-4 overflow-hidden rounded-2xl shadow-2xl sm:mx-0">
-      <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div ref={caja} onScroll={medir} className="scroll-tema overflow-x-auto">
         <div className="grid w-max min-w-full" style={{ gridTemplateColumns: columnas }}>
           {/* Encabezado */}
           <div className={`${fijoIzq} ${fondo(false)} flex items-center border-b border-white/10 px-4 py-3`}>
@@ -239,6 +268,7 @@ function Rejilla({ datos }: { datos: RankingDatos }) {
           })}
         </div>
       </div>
+    </div>
     </div>
   )
 }

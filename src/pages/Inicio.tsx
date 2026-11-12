@@ -85,7 +85,7 @@ export function Inicio() {
           )}
           <ul className="space-y-3">
             {deActual.map((q) => (
-              <FilaQuiniela key={q.id} q={q} />
+              <FilaQuiniela key={q.id} q={q} jornada={actual ?? undefined} />
             ))}
           </ul>
 
@@ -127,7 +127,7 @@ export function Inicio() {
   )
 }
 
-function FilaQuiniela({ q }: { q: Quiniela }) {
+function FilaQuiniela({ q, jornada }: { q: Quiniela; jornada?: Jornada }) {
   const completa = q.pronosticados >= q.totalPartidos
   return (
     <li>
@@ -143,7 +143,7 @@ function FilaQuiniela({ q }: { q: Quiniela }) {
             <p className="text-sm font-bold tracking-wider uppercase">Quiniela {q.numero}</p>
             <span className="text-[10px] font-bold text-white/40">#{q.folio}</span>
           </div>
-          <EstadoQuinielaBadge estado={q.estado} />
+          <EstadoQuinielaBadge estado={q.estado} jornada={jornada?.estadoVisual} />
           <p className="text-[10px] font-black tracking-wide text-white/40 uppercase">
             {completa ? `${q.totalPartidos} partidos` : `${q.pronosticados}/${q.totalPartidos} partidos`}
             {q.puntos !== null && <span className="ml-2 text-primary">{q.puntos} pts</span>}
@@ -166,7 +166,7 @@ function JornadaAnterior({ j, quinielas }: { j: Jornada; quinielas: Quiniela[] }
       </div>
       <ul className="space-y-3">
         {quinielas.map((q) => (
-          <FilaQuiniela key={q.id} q={q} />
+          <FilaQuiniela key={q.id} q={q} jornada={j} />
         ))}
       </ul>
     </section>
