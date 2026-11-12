@@ -155,6 +155,19 @@ export function AdminJornadas() {
       {op.mensaje && <Alerta tipo={op.mensaje.tipo}>{op.mensaje.texto}</Alerta>}
       {errorCarga && <Alerta tipo="error">{errorCarga}</Alerta>}
 
+      {datos?.estadoTemporada === 'finalizado' ? (
+        <Alerta tipo="aviso">El torneo {datos.temporada} está finalizado: ya no acepta jornadas nuevas.</Alerta>
+      ) : (
+        datos && (
+          <CrearJornada
+            key={datos.idTemporada}
+            idTemporada={datos.idTemporada}
+            siguiente={(datos.jornadas[0]?.numero ?? 0) + 1}
+            onCreada={() => cargar()}
+          />
+        )
+      )}
+
       <section className="glass-card overflow-hidden rounded-2xl">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <h2 className="text-sm font-black tracking-widest uppercase">Listado de jornadas</h2>
@@ -163,7 +176,7 @@ export function AdminJornadas() {
 
         {!datos && !errorCarga && <p className="px-5 py-8 text-center text-sm text-white/50">Cargando…</p>}
         {datos?.jornadas.length === 0 && (
-          <p className="px-5 py-8 text-center text-sm text-white/50">Todavía no hay jornadas. Crea la primera abajo.</p>
+          <p className="px-5 py-8 text-center text-sm text-white/50">Todavía no hay jornadas. Crea la primera arriba.</p>
         )}
 
         <ul className="divide-y divide-white/10">
@@ -178,19 +191,6 @@ export function AdminJornadas() {
           ))}
         </ul>
       </section>
-
-      {datos?.estadoTemporada === 'finalizado' ? (
-        <Alerta tipo="aviso">El torneo {datos.temporada} está finalizado: ya no acepta jornadas nuevas.</Alerta>
-      ) : (
-        datos && (
-          <CrearJornada
-            key={datos.idTemporada}
-            idTemporada={datos.idTemporada}
-            siguiente={(datos.jornadas[0]?.numero ?? 0) + 1}
-            onCreada={() => cargar()}
-          />
-        )
-      )}
     </div>
   )
 }

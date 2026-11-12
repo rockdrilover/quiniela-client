@@ -101,7 +101,7 @@ export function SeccionPago({ q, pago, onActualizada }: { q: Quiniela; pago: Pag
     if (!archivo) return
     const e = validarArchivo(archivo)
     if (e) return op.error(e)
-    const r = await op.ejecutar('subir', () => quinielasApi.subirComprobante(q.id, archivo), 'Comprobante enviado. Te avisaremos por correo cuando lo revisemos.')
+    const r = await op.ejecutar('subir', () => quinielasApi.subirComprobante(q.id, archivo), cambiar ? 'Comprobante actualizado. Te avisaremos por correo cuando lo revisemos.' : 'Comprobante enviado. Te avisaremos por correo cuando lo revisemos.')
     if (r) onActualizada(r)
   }
 
@@ -123,6 +123,8 @@ export function SeccionPago({ q, pago, onActualizada }: { q: Quiniela; pago: Pag
   })()
 
   const esperaPago = q.estado === 'pendiente_pago' || q.estado === 'rechazada'
+  // Se equivocó de archivo: puede cambiarlo mientras el admin no lo haya revisado
+  const cambiar = q.estado === 'en_revision' && !!c
 
   return (
     <section className="glass-card space-y-4 rounded-[2rem] p-5">
@@ -171,10 +173,14 @@ export function SeccionPago({ q, pago, onActualizada }: { q: Quiniela; pago: Pag
             disabled={op.ocupado !== null}
             className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-primary/40 py-4 text-sm font-bold tracking-widest text-primary uppercase transition-colors hover:bg-primary/10 disabled:opacity-50"
           >
-            <Icono nombre="upload" />
-            {op.ocupado ? 'Subiendo…' : c ? 'Subir otro comprobante' : 'Subir comprobante'}
+            <Icono nombre={cambiar ? 'swap_horiz' : 'upload'} />
+            {op.ocupado ? 'Subiendo…' : cambiar ? 'Cambiar comprobante' : c ? 'Subir otro comprobante' : 'Subir comprobante'}
           </button>
-          <p className="text-center text-[11px] text-white/40">Foto o PDF de tu transferencia o depósito · máx. 10 MB · antes del cierre</p>
+          <p className="text-center text-[11px] text-white/40">
+            {cambiar
+              ? '¿Te equivocaste de archivo? Cámbialo mientras no lo revisemos · máx. 10 MB'
+              : 'Foto o PDF de tu transferencia o depósito · máx. 10 MB · antes del cierre'}
+          </p>
         </>
       )}
       {esperaPago && (
