@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
 import { useAuth } from '../auth/AuthContext'
+import { NavInferior } from '../components/AppLayout'
 import { Icono } from '../components/Icono'
 
 /** Archivo generado con `npm run pdf` a partir de esta misma pantalla (modo ?imprimir). */
@@ -30,7 +31,15 @@ const PREGUNTAS = [
   },
   {
     p: '¿Cuándo veo los pronósticos de los demás?',
-    r: 'En cuanto empieza el primer partido. Antes de eso cada quien ve solo los suyos, para que nadie copie.',
+    r: 'En Resultados ves los pronósticos de todas las quinielas que ya están participando, es decir, con el pago validado.',
+  },
+  {
+    p: '¿Cómo se desempata?',
+    r: 'Si dos quinielas tienen los mismos puntos, gana la que tenga más marcadores exactos. Si siguen empatadas, el premio se reparte en partes iguales.',
+  },
+  {
+    p: '¿Qué pasa si agregan un partido después de que envié mi quiniela?',
+    r: 'Mientras no empiece ningún partido, abre tu quiniela y ponle marcador al partido nuevo. Si no lo haces, ese partido no te suma puntos.',
   },
   {
     p: '¿Puedo jugar varias quinielas?',
@@ -72,7 +81,7 @@ export function ComoSeJuega() {
         </header>
       )}
 
-      <main className={`mx-auto max-w-2xl space-y-5 px-4 ${imprimir ? 'py-8' : 'pt-8 pb-16'}`}>
+      <main className={`mx-auto max-w-2xl space-y-5 px-4 ${imprimir ? 'py-8' : usuario ? 'pt-8 pb-32' : 'pt-8 pb-16'}`}>
         {imprimir ? (
           <div className="manual-bloque flex items-center gap-4 pb-2">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary">
@@ -112,31 +121,74 @@ export function ComoSeJuega() {
         </Seccion>
 
         <Seccion icono="scoreboard" titulo="¿Cómo se suman puntos?">
+          <p className="text-sm text-white/75">
+            Cada partido vale <strong className="text-white">1 punto</strong>. Para ganarlo solo tienes que atinarle a{' '}
+            <strong className="text-white">cómo termina el partido</strong>: que gane el local, que gane el visitante o que
+            empaten. Los goles no tienen que coincidir.
+          </p>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 text-center">
               <p className="text-4xl font-black text-primary">1</p>
-              <p className="mt-1 text-sm font-bold">Le atinaste al resultado</p>
-              <p className="text-xs text-white/55">Ganador o empate, sea o no el marcador exacto</p>
+              <p className="mt-1 text-sm font-bold">Atinaste</p>
+              <p className="text-xs text-white/55">Pusiste el mismo ganador que el partido, o empate y fue empate</p>
             </div>
             <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-center">
               <p className="text-4xl font-black text-red-300">0</p>
               <p className="mt-1 text-sm font-bold">Fallaste</p>
-              <p className="text-xs text-white/55">No le atinaste a quién ganaba</p>
+              <p className="text-xs text-white/55">Ganó el otro equipo, o hubo empate y tú no lo pusiste (o al revés)</p>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-            <p className="text-[11px] font-black tracking-widest text-white/50 uppercase">Ejemplo · el partido terminó 2-1</p>
-            <ul className="mt-3 space-y-2 text-sm">
-              <Ejemplo marcador="2-1" puntos={1} texto="Marcador exacto" />
-              <Ejemplo marcador="1-0" puntos={1} texto="También gana el local" />
-              <Ejemplo marcador="0-0" puntos={0} texto="Pusiste empate" />
-            </ul>
+          <div className="flex items-start gap-3 rounded-2xl border border-yellow-300/30 bg-yellow-300/10 p-4">
+            <Icono nombre="star" className="text-yellow-300 [font-variation-settings:'FILL'_1]" />
+            <p className="text-sm text-white/75">
+              <strong className="text-white">Marcador exacto:</strong> también vale 1 punto, <strong className="text-white">no da puntos extra</strong>.
+              Pero se cuenta aparte y sirve para <strong className="text-white">desempatar</strong> el ranking.
+            </p>
           </div>
-          <p className="flex items-start gap-2 text-xs text-white/55">
-            <Icono nombre="info" className="text-base! text-primary" />
-            Los puntos cuentan cuando el partido termina y solo en quinielas con el pago validado.
-          </p>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-[11px] font-black tracking-widest text-white/50 uppercase">Ejemplo 1 · terminó 2-1 (ganó el local)</p>
+              <ul className="mt-3 space-y-2 text-sm">
+                <Ejemplo marcador="2-1" puntos={1} texto="Exacto" exacto />
+                <Ejemplo marcador="3-0" puntos={1} texto="Gana el local" />
+                <Ejemplo marcador="1-1" puntos={0} texto="Empate" />
+                <Ejemplo marcador="0-1" puntos={0} texto="Gana el visitante" />
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-[11px] font-black tracking-widest text-white/50 uppercase">Ejemplo 2 · terminó 1-1 (empate)</p>
+              <ul className="mt-3 space-y-2 text-sm">
+                <Ejemplo marcador="1-1" puntos={1} texto="Exacto" exacto />
+                <Ejemplo marcador="0-0" puntos={1} texto="Empate" />
+                <Ejemplo marcador="2-1" puntos={0} texto="Gana el local" />
+              </ul>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/75">
+            <p className="font-bold text-white">Tus puntos de la jornada</p>
+            <p className="mt-1">
+              Se suma 1 punto por cada partido que le atinaste. Si la jornada tiene 9 partidos, lo máximo son 9 puntos.
+            </p>
+          </div>
+
+          <ul className="space-y-1.5 text-xs text-white/55">
+            <li className="flex items-start gap-2">
+              <Icono nombre="info" className="text-base! text-primary" />
+              Los puntos se cuentan cuando el administrador captura el marcador final del partido.
+            </li>
+            <li className="flex items-start gap-2">
+              <Icono nombre="info" className="text-base! text-primary" />
+              Solo suman las quinielas con el pago validado.
+            </li>
+            <li className="flex items-start gap-2">
+              <Icono nombre="info" className="text-base! text-primary" />
+              Un partido suspendido no cuenta para nadie.
+            </li>
+          </ul>
         </Seccion>
 
         <div className="manual-nueva-pagina">
@@ -180,6 +232,8 @@ export function ComoSeJuega() {
           </div>
         )}
       </main>
+
+      {!imprimir && <NavInferior />}
     </div>
   )
 }
@@ -195,11 +249,14 @@ function Seccion({ icono, titulo, children }: { icono: string; titulo: string; c
   )
 }
 
-function Ejemplo({ marcador, puntos, texto }: { marcador: string; puntos: number; texto: string }) {
+function Ejemplo({ marcador, puntos, texto, exacto = false }: { marcador: string; puntos: number; texto: string; exacto?: boolean }) {
   return (
     <li className="flex items-center gap-3">
       <span className="shrink-0 rounded-lg bg-white/5 px-2.5 py-1 font-bold whitespace-nowrap">Pusiste {marcador}</span>
-      <span className="flex-1 text-white/65">{texto}</span>
+      <span className="flex flex-1 items-center gap-1 text-white/65">
+        {texto}
+        {exacto && <Icono nombre="star" className="text-sm! text-yellow-300 [font-variation-settings:'FILL'_1]" />}
+      </span>
       <span className={`shrink-0 font-black ${puntos > 0 ? 'text-primary' : 'text-red-300'}`}>
         {puntos} {puntos === 1 ? 'pt' : 'pts'}
       </span>

@@ -97,8 +97,9 @@ export function AdminPartidos() {
         }
       />
 
-      {enBorrador && (
+      {(enBorrador || j.aceptaPronosticos) && (
         <NuevoPartido
+          activa={!enBorrador}
           equipos={equipos}
           ocupados={ocupados}
           ocupado={op.ocupado === 'nuevo'}
@@ -439,6 +440,8 @@ function PartidoEditable(props: {
 }
 
 function NuevoPartido(props: {
+  /** La jornada ya está activa: se agrega un partido que se pasó (mientras no empiece ninguno). */
+  activa?: boolean
   equipos: Equipo[]
   ocupados: Set<number>
   ocupado: boolean
@@ -448,8 +451,14 @@ function NuevoPartido(props: {
     <section className="glass-card relative z-20 space-y-4 rounded-2xl p-5">
       <div className="flex items-center gap-2">
         <Icono nombre="add_circle" className="text-primary" />
-        <h2 className="text-sm font-black tracking-widest uppercase">Crear partido</h2>
+        <h2 className="text-sm font-black tracking-widest uppercase">{props.activa ? 'Agregar partido' : 'Crear partido'}</h2>
       </div>
+      {props.activa && (
+        <p className="text-xs text-white/60">
+          ¿Se te pasó un partido? Puedes agregarlo mientras no empiece ninguno. Quienes ya enviaron su quiniela tendrán que
+          pronosticarlo para guardar cambios; si no lo hacen, ese partido no les suma puntos.
+        </p>
+      )}
       <FormPartido equipos={props.equipos} ocupados={props.ocupados} ocupado={props.ocupado} textoBoton="Añadir" onEnviar={props.onAgregar} limpiarAlEnviar />
     </section>
   )
@@ -532,16 +541,6 @@ function PartidoResultado(props: {
       <div className="flex items-center justify-between px-1">
         <span className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">Partido {props.numero}</span>
         <div className="flex items-center gap-3">
-          {suspendido && props.onReactivar && (
-            <button
-              type="button"
-              onClick={props.onReactivar}
-              disabled={props.ocupado}
-              className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-2 py-1 text-[10px] font-black tracking-wider text-primary uppercase hover:bg-primary/20 disabled:opacity-40"
-            >
-              <Icono nombre="restart_alt" className="text-sm!" /> Reactivar
-            </button>
-          )}
           <span className="text-[10px] font-bold text-white/40 uppercase">
             {suspendido ? 'Suspendido' : finalizado ? 'Final' : fechaHoraCorta(p.fechaHora)}
           </span>
@@ -568,12 +567,12 @@ function PartidoResultado(props: {
         </div>
       </div>
       {editable && (
-        <div className="flex gap-2">
+        <div className="space-y-2">
           <button
             type="button"
             disabled={!listo || (finalizado && !cambio) || props.ocupado}
             onClick={() => props.onGuardar(Number(gl), Number(gv))}
-            className="flex-1 rounded-xl bg-primary py-3 text-xs font-black tracking-widest text-fondo uppercase disabled:opacity-40"
+            className="w-full rounded-xl bg-primary py-3 text-xs font-black tracking-widest text-fondo uppercase disabled:opacity-40"
           >
             {props.ocupado ? 'Guardando…' : finalizado ? (cambio ? 'Corregir marcador' : 'Finalizado ✓') : 'Finalizar partido'}
           </button>
@@ -582,12 +581,22 @@ function PartidoResultado(props: {
               type="button"
               disabled={props.ocupado}
               onClick={props.onSuspender}
-              className="rounded-xl border border-white/15 px-3 text-xs font-bold text-white/60 hover:border-red-400/50 hover:text-red-300"
+              className="w-full rounded-xl border border-white/15 py-3 text-xs font-black tracking-widest text-white/60 uppercase transition-colors hover:border-red-400/50 hover:text-red-300 disabled:opacity-40"
             >
-              Suspender
+              Suspender partido
             </button>
           )}
         </div>
+      )}
+      {suspendido && props.onReactivar && (
+        <button
+          type="button"
+          onClick={props.onReactivar}
+          disabled={props.ocupado}
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-black tracking-widest text-fondo uppercase disabled:opacity-40"
+        >
+          <Icono nombre="restart_alt" className="text-base!" /> Reactivar partido
+        </button>
       )}
     </div>
   )
