@@ -60,6 +60,40 @@ export function AdminPartidos() {
   const capturaResultados = !enBorrador && j.estado !== 'finalizada' && !j.aceptaPronosticos
   const ocupados = new Set(partidos.flatMap((p) => [p.local.id, p.visitante.id]))
 
+  /** Pide confirmación y abre la jornada. completa: se lanzó solo al capturar el último partido posible. */
+  const activar = async (completa?: { partidos: number }) => {
+    const ok = await confirmar({
+      titulo: completa ? '¡Partidos completos!' : 'Activar jornada',
+      mensaje: (
+        <>
+          {completa && (
+            <>
+              Ya capturaste los <strong>{completa.partidos} partidos</strong> de <strong>{j.nombre}</strong>. ¿Deseas dar
+              inicio a la jornada?{' '}
+            </>
+          )}
+          Los jugadores podrán capturar quinielas {completa ? '' : <>de <strong>{j.nombre}</strong> </>}hasta que empiece el
+          primer partido. Podrás corregir o agregar partidos mientras no empiece ninguno.
+          {completa && <span className="mt-2 block text-xs text-white/50">Si hay otra jornada abierta, ciérrala primero.</span>}
+        </>
+      ),
+      confirmar: 'Activar',
+      cancelar: completa ? 'Después' : undefined,
+      icono: 'play_circle',
+    })
+    if (ok) await actualizar('abrir', () => jornadasApi.accion(j.id, 'abrir'), `${j.nombre} abierta: ya se pueden capturar pronósticos`)
+  }
+
+  /** En borrador, al agregar un partido revisa si ya no quedan equipos libres para armar otro. */
+  const agregar = async (d: DatosPartido) => {
+    const r = await actualizar('nuevo', () => jornadasApi.agregarPartido(j.id, d), 'Partido agregado')
+    if (!r || r.jornada.estado !== 'borrador') return r
+    const usados = new Set(r.partidos.flatMap((p) => [p.local.id, p.visitante.id]))
+    const libres = equipos.filter((e) => !usados.has(e.id)).length
+    if (equipos.length > 0 && libres < 2) await activar({ partidos: r.partidos.length })
+    return r
+  }
+
   return (
     <div className="space-y-6">
       <Link to="/admin/jornadas" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-primary">
@@ -103,7 +137,7 @@ export function AdminPartidos() {
           equipos={equipos}
           ocupados={ocupados}
           ocupado={op.ocupado === 'nuevo'}
-          onAgregar={(d) => actualizar('nuevo', () => jornadasApi.agregarPartido(j.id, d), 'Partido agregado')}
+          onAgregar={agregar}
         />
       )}
 
@@ -211,20 +245,7 @@ export function AdminPartidos() {
         <button
           type="button"
           disabled={op.ocupado !== null}
-          onClick={async () => {
-            const ok = await confirmar({
-              titulo: 'Activar jornada',
-              mensaje: (
-                <>
-                  Los jugadores podrán capturar quinielas de <strong>{j.nombre}</strong> hasta que empiece el primer
-                  partido. Después ya no podrás cambiar los partidos.
-                </>
-              ),
-              confirmar: 'Activar',
-              icono: 'play_circle',
-            })
-            if (ok) actualizar('abrir', () => jornadasApi.accion(j.id, 'abrir'), `${j.nombre} abierta: ya se pueden capturar pronósticos`)
-          }}
+          onClick={() => activar()}
           className="w-full rounded-2xl bg-primary py-5 text-lg font-black tracking-widest text-fondo uppercase shadow-[0_0_25px_rgba(19,236,91,0.5)] transition-all active:scale-[0.97] disabled:opacity-50"
         >
           Activar jornada
