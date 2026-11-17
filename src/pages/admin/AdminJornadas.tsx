@@ -72,7 +72,18 @@ export function AdminJornadas() {
       },
       eliminar: {
         titulo: 'Eliminar jornada',
-        mensaje: <>Se borrarán {nombre} y sus partidos. No se puede deshacer.</>,
+        mensaje: (
+          <>
+            Se borrarán {nombre} y sus {j.totalPartidos} partidos para que puedas volver a capturarla.
+            {j.totalQuinielas > 0 && (
+              <>
+                {' '}También se borrarán sus <strong>{j.totalQuinielas} quinielas</strong> sin pagar. Si alguna ya tiene pago o
+                comprobante, no se podrá eliminar.
+              </>
+            )}{' '}
+            No se puede deshacer.
+          </>
+        ),
         confirmar: 'Eliminar',
         tono: 'peligro',
         icono: 'delete',
@@ -292,7 +303,7 @@ function FilaJornada(props: {
           ) : (
             <BotonAccion icono="visibility" texto="Mostrar" onClick={() => onAccion('mostrar')} disabled={ocupada} />
           ))}
-        {j.estado === 'borrador' && j.totalQuinielas === 0 && (
+        {j.estado !== 'finalizada' && (
           <BotonAccion icono="delete" texto="Eliminar" tono="rojo" onClick={() => onAccion('eliminar')} disabled={ocupada} />
         )}
       </div>
